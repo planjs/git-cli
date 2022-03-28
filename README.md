@@ -23,13 +23,20 @@ git-us --autoMerge=develop
 ```
 将当前分支合并到`develop`并且将本地分支切换到`develop`分支，失败条件：合并存在冲突、本地分支存在为commit内容。
 
+#### `--check=branch --entry=/project` 指定仓库目录地址
+entry参数可以指定所在仓库目录地址
+
 ## Node Api
 #### 使用例子
 
 ```javascript
-import { openRepository } from '@quan/git-utils';
-const repo = openRepository(__dirname);
+import gitUtils, { openRepository } from '@quan/git-utils';
+const repo = gitUtils({ autoMerge: 'develop' })
 ```
+
+###### `gitUtils(options: { check?: string, autoMerge?: string, entry?: string })`
+与命令行行为一致
+
 
 ###### `openRepository(path?: string): Promise<Git.Repository>`
 打开一个git仓库，path 参数为仓库目录路径。

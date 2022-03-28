@@ -2,7 +2,8 @@ import { AppOption } from '../app';
 
 const OptionMap = {
   '--check': 'check',
-  '--autoMerge': 'autoMerge'
+  '--autoMerge': 'autoMerge',
+  '--entry': 'entry'
 }
 
 function argvKeyToOptionKey(argvKey: any): keyof AppOption | void {
