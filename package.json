@@ -1,0 +1,25 @@
+{
+  "name": "git-utils",
+  "version": "0.0.1",
+  "description": "",
+  "main": "lib/index.js",
+  "scripts": {
+    "test": "test",
+    "build": "tsc",
+    "dev": "tsc -w"
+  },
+  "bin": {
+    "git-us": "lib/cli.js"
+  },
+  "author": "yangzhoulong@icloud.com",
+  "license": "MIT",
+  "dependencies": {
+    "nodegit": "^0.27.0"
+  },
+  "devDependencies": {
+    "@types/nodegit": "^0.27.10",
+    "@types/shelljs": "^0.8.11",
+    "ora": "^6.1.0",
+    "shelljs": "^0.8.5"
+  }
+}
