@@ -27,5 +27,5 @@ jobs:
           key: ${{ matrix.os }}-${{ matrix.node }}-modules-${{ hashFiles('**/yarn.lock') }}
       - name: Install dependencies
         run: yarn
-      - name: Jest
+      - name: Test
         run: yarn test
