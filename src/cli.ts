@@ -3,6 +3,6 @@
 import main from './app';
 import { getAppOptions } from './utils/options';
 
-const options = getAppOptions();
+const option = getAppOptions();
 
-main(options);
+main(option);

@@ -3,6 +3,13 @@
   "version": "0.0.1",
   "description": "",
   "main": "lib/index.js",
+  "keywords": [
+    "git",
+    "ci",
+    "cd",
+    "git check",
+    "git utils"
+  ],
   "scripts": {
     "build": "tsc",
     "prepare": "yarn build",
@@ -41,5 +48,8 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/planjs/git-cli.git"
+  },
+  "publishConfig": {
+    "access": "public"
   }
 }
