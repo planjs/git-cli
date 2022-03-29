@@ -11,19 +11,9 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
-        node: ['12', '14', '16']
+        node: ['12', '14']
     name: ${{ matrix.os }} Use Node.js ${{ matrix.node }}
     steps:
-      - name: Setup python 3.6
-          run: |
-            mkdir ~/python
-            cd ~/python
-            wget https://www.python.org/ftp/python/3.6.15/Python-3.6.15.tgz
-            tar -xvf Python-3.6.15.tgz
-            cd Python-3.6.15
-            ./configure
-            make
-            make install
       - name: Check out Git repository
         uses: actions/checkout@v2
       - name: Setup node
