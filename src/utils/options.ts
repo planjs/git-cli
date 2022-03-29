@@ -3,8 +3,8 @@ import { AppOption } from '../app';
 const OptionMap = {
   '--check': 'check',
   '--autoMerge': 'autoMerge',
-  '--entry': 'entry'
-}
+  '--entry': 'entry',
+};
 
 function argvKeyToOptionKey(argvKey: any): keyof AppOption | void {
   return OptionMap[argvKey as keyof typeof OptionMap] as keyof AppOption;
@@ -20,7 +20,7 @@ export function getAppOptions(option?: AppOption): AppOption {
     const [argvKey, val] = item.split('=');
     const key = argvKeyToOptionKey(argvKey);
     if (key) options[key] = val;
-  })
-  
+  });
+
   return options;
 }

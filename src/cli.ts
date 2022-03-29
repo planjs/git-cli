@@ -1,4 +1,5 @@
-#!/usr/bin/env 
+#!/usr/bin/env
+
 import main from './app';
 import { getAppOptions } from './utils/options';
 

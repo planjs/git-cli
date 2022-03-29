@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "prepare": "yarn build",
-    "lint:fix": "eslint --fix --ext src",
+    "lint:fix": "eslint --fix --ext src/**/*.ts",
     "dev": "tsc -w",
     "test": "node --expose-gc test"
   },
@@ -28,6 +28,7 @@
     "@planjs/fabric": "^0.0.90",
     "@types/nodegit": "^0.27.10",
     "@types/shelljs": "^0.8.11",
+    "@typescript-eslint/typescript-estree": "^5.17.0",
     "commitlint": "^16.2.3",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.12.0",
