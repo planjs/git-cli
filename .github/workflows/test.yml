@@ -15,9 +15,6 @@ jobs:
     name: ${{ matrix.os }} Use Node.js ${{ matrix.node }}
     steps:
       - name: Setup python 3.6
-          env:
-            CC: clang
-            CXX: clang++
           run: |
             mkdir ~/python
             cd ~/python
