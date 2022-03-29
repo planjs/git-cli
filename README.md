@@ -3,8 +3,8 @@
 
 ### 安装
 ```
-npm i -g @planjs/git-utils
-# or 
+sudo npm i -g @planjs/git-utils --unsafe-perm=true
+# or
 npm i -D @planjs/git-utils
 ```
 

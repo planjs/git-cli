@@ -6,11 +6,14 @@ import {
   pull,
   switchBranch,
 } from './git';
+import fs from 'fs';
+import { join } from 'path';
 
 export type AppOption = {
   check?: string;
   autoMerge?: string;
   entry?: string;
+  version?: string;
 };
 
 /** 检测分支程序 */
@@ -37,6 +40,11 @@ async function autoMerge(options: AppOption) {
 
 export default async function main(options: AppOption) {
   try {
+    if (options.version) {
+      const data = fs.readFileSync(join(__dirname, '../../package.json')).toString();
+      const Package = JSON.parse(data);
+      console.log(Package.version);
+    }
     if (options.check) {
       await checkApp(options);
     }

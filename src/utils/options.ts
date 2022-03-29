@@ -4,6 +4,7 @@ const OptionMap = {
   '--check': 'check',
   '--autoMerge': 'autoMerge',
   '--entry': 'entry',
+  '--v': 'version',
 };
 
 function argvKeyToOptionKey(argvKey: any): keyof AppOption | void {
@@ -19,7 +20,7 @@ export function getAppOptions(option?: AppOption): AppOption {
   argv.forEach((item) => {
     const [argvKey, val] = item.split('=');
     const key = argvKeyToOptionKey(argvKey);
-    if (key) options[key] = val;
+    if (key) options[key] = val || 'true';
   });
 
   return options;
