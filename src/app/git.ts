@@ -1,45 +1,62 @@
-import Git from 'nodegit';
 import { join } from 'path';
-import shell from 'shelljs';
+import execa from 'execa';
+
+type Repository = {
+  path: string;
+  stdout: string;
+  execa: execa.ExecaReturnValue<string>;
+};
 
 /**
  * 打开仓库
  * @param path
  * @returns repo
  */
-export async function openRepository(path: string): Promise<Git.Repository> {
-  if (path[0] === '/') return Git.Repository.open(path);
+export async function openRepository(path: string): Promise<Repository> {
+  const repositoryPtah = path[0] === '/' ? path : join(process.cwd(), path);
+  const res = await execa('git', ['status'], { execPath: repositoryPtah, preferLocal: true });
+  if (res.exitCode === 0 && res.stdout) {
+    return { path: repositoryPtah, execa: res, stdout: res.stdout };
+  }
 
-  return Git.Repository.open(join(process.cwd(), path));
+  return Promise.reject(new Error(res.stderr));
 }
 
 /**
  * 检测是否存在没有commit的文件修改
  * @param repo
  */
-export async function checkNotCommit(repo: Git.Repository): Promise<Git.Repository> {
+export async function checkNotCommit(repo: Repository) {
   try {
-    const res = await repo.getStatus();
-    if (res.length === 0) return Promise.resolve(repo);
-
-    console.log('\x1B[33m', '发现存在文件未保存 🌝 \n');
-
-    res.forEach((file) => {
-      console.log('\x1B[32m', `* ${file.path()}`);
+    const { stdout } = await execa('git', ['diff', '--name-only'], {
+      execPath: repo.path,
+      preferLocal: true,
     });
 
-    console.log('\x1B[31m', '\n 请保存文件后重试');
+    const { stdout: cachedStdout } = await execa('git', ['diff', '--cached', '--name-only'], {
+      execPath: repo.path,
+      preferLocal: true,
+    });
 
-    throw '存未保存文件，终止程序 \n';
+    if (stdout.trim().length === 0 && cachedStdout.trim().length === 0)
+      return Promise.resolve(repo);
+
+    console.log('\x1B[33m', '发现存在文件未保存 🌝 \n');
+    console.log(stdout);
+    console.log(cachedStdout);
+    throw '\n 请保存文件后重试';
   } catch (error) {
     return Promise.reject(error);
   }
 }
 
 /** 拉取代码 */
-export async function pull(repo: Git.Repository) {
-  await shell.cd(repo.workdir());
-  await shell.exec('git pull');
+export async function pull(repo: Repository) {
+  try {
+    await execa('git', ['pull'], { execPath: repo.path, preferLocal: true });
+  } catch (error) {
+    return Promise.resolve(repo);
+  }
   return Promise.resolve(repo);
 }
 
@@ -48,41 +65,26 @@ export async function pull(repo: Git.Repository) {
  * @param repo
  * @returns
  */
-export async function getCurrenBranchName(repo: Git.Repository): Promise<string> {
-  try {
-    const branch = await repo.getCurrentBranch();
-    const branchName = branch.name();
-    return Promise.resolve(branchName.replace('refs/heads/', ''));
-  } catch (error) {
-    return Promise.reject(error);
-  }
+export async function getCurrenBranchName(repo: Repository): Promise<string> {
+  const res = await execa('git', ['branch', '--show-current'], {
+    execPath: repo.path,
+    preferLocal: true,
+  });
+  return res.stdout;
 }
-
-type BranchList = {
-  heads: string[];
-  remotes: string[];
-};
 
 /**
  * 获取分支列表
  * @param repo
  * @returns BranchList
  */
-export async function getBranchList(repo: Git.Repository): Promise<BranchList> {
-  const result: BranchList = {
-    heads: [],
-    remotes: [],
-  };
+export async function getBranchList(repo: Repository): Promise<string[]> {
   try {
-    const list = await repo.getReferenceNames(Git.Reference.TYPE.LISTALL);
-    list.forEach((item) => {
-      if (/^refs\/heads\//.test(item)) result.heads.push(item.replace('refs/heads/', ''));
-      else result.remotes.push(item.replace('refs/remotes/origin/', ''));
-    });
-
-    return Promise.resolve(result);
+    const res = await execa('git', ['branch'], { execPath: repo.path, preferLocal: true });
+    const list = res.stdout.split('\n').map((item) => item.replace(/^\*/, '').trim());
+    return list;
   } catch (error) {
-    return Promise.resolve(result);
+    return Promise.resolve([]);
   }
 }
 
@@ -91,47 +93,19 @@ export async function getBranchList(repo: Git.Repository): Promise<BranchList> {
  * @param repo 仓库对象
  * @param branchName 目标分支名称
  */
-export async function switchBranch(repo: Git.Repository, name: string): Promise<Git.Repository> {
+export async function switchBranch(repo: Repository, name: string): Promise<Repository> {
   try {
     const currenBranch = await getCurrenBranchName(repo);
     if (currenBranch === name) return Promise.resolve(repo); // 当前分支与目标分支一致
 
-    const branch = await getBranchList(repo);
+    const branchList = await getBranchList(repo);
 
-    /** 远程和本地都存在或者本地存在，直接切换 */
-    if (branch.heads.includes(name) && branch.remotes.includes(name)) {
-      await repo.checkoutBranch(name);
-      return repo;
+    // 已经存在分支
+    if (branchList.includes(name)) {
+      await execa('git', ['checkout', name], { execPath: repo.path, preferLocal: true });
+    } else {
+      await execa('git', ['checkout', '-b', name], { execPath: repo.path, preferLocal: true });
     }
-
-    /** 远程存在，本地不存在 */
-    if (branch.remotes.includes(name)) {
-      const commit = await repo.getHeadCommit();
-      const res = await repo.createBranch(name, commit, false);
-      await repo.checkoutBranch(name);
-
-      // 关联远端分支
-      await Git.Branch.setUpstream(res, `origin/${name}`);
-
-      // 更新本地分支
-      await repo.mergeBranches(name, `origin/${name}`);
-      return repo;
-    }
-
-    /** 本地存在，远程不存在 */
-    if (branch.heads.includes(name)) {
-      await repo.checkoutBranch(name);
-      shell.cd(repo.workdir());
-      await shell.exec(`git push --set-upstream origin ${name}`);
-      return repo;
-    }
-
-    /** 远程本地不存在，本地不存在 */
-    const commit = await repo.getHeadCommit();
-    await repo.createBranch(name, commit, false);
-    await repo.checkoutBranch(name);
-    shell.cd(repo.workdir());
-    await shell.exec(`git push --set-upstream origin ${name}`);
     return repo;
   } catch (error) {
     return Promise.reject(error);
@@ -142,50 +116,50 @@ export async function switchBranch(repo: Git.Repository, name: string): Promise<
  * 合并其他分支
  * @param fromBranch
  */
-export async function mergeBranch(
-  repo: Git.Repository,
-  fromBranch: string,
-): Promise<Git.Repository> {
+export async function mergeBranch(repo: Repository, fromBranch: string): Promise<Repository> {
+  const head = await getHeadCommit(repo);
+
   try {
-    const current = await getCurrenBranchName(repo);
-    await repo.mergeBranches(current, fromBranch).catch(async (err) => {
-      if (err.hasConflicts()) {
-        // 遍历冲突的文件
-        const conflictEntriesByPath = await getConflictEntriesByPath(err);
-        conflictEntriesByPath.forEach((item) => {
-          console.log('\x1B[34m', ` -> ${item}`);
-        });
-
-        // 回退分支
-        await repo.checkoutBranch(fromBranch);
-        throw new Error(`合并分支失败，请手动把 ${fromBranch} 合并到 ${current} 后重试 \n`);
-      }
-
-      throw err;
-    });
-
+    await execa('git', ['merge', fromBranch], { execPath: repo.path, preferLocal: true });
     return Promise.resolve(repo);
   } catch (error) {
-    return Promise.reject(error);
+    const nowBranch = await getCurrenBranchName(repo);
+
+    // 回退操作
+    await execa('git', ['reset', '--hard', head], { execPath: repo.path, preferLocal: true });
+    // 回退到原始分支
+    await switchBranch(repo, fromBranch);
+    console.error(error);
+    return Promise.reject(
+      new Error(`自动合并 ${nowBranch} 分支失败，请手动合并 ${nowBranch} 后再尝试运行命令`),
+    );
   }
 }
 
-export async function push(repo: Git.Repository) {
-  shell.cd(repo.workdir());
-  await shell.exec(`git push`);
+export async function getHeadCommit(repo: Repository) {
+  try {
+    const res = await execa('git', ['rev-parse', 'HEAD'], {
+      execPath: repo.path,
+      preferLocal: true,
+    });
+    return res.stdout;
+  } catch (error) {
+    return '';
+  }
 }
 
-/**
- * 获取冲突文件的内容
- * @param index
- * @returns
- */
-async function getConflictEntriesByPath(index: Git.Index) {
-  const entries = index.entries();
-  const conflictEntryPath = entries.reduce((_conflictEntryNames, entry) => {
-    if (Git.Index.entryIsConflict(entry)) _conflictEntryNames.add(entry.path);
-    return _conflictEntryNames;
-  }, new Set<string>());
+export async function push(repo: Repository) {
+  const name = await getCurrenBranchName(repo);
 
-  return conflictEntryPath;
+  return execa('git', ['push'], { execPath: repo.path, preferLocal: true })
+    .catch(() =>
+      execa('git', ['push', `--set-upstream origin ${name}`], {
+        execPath: repo.path,
+        preferLocal: true,
+      }),
+    )
+    .catch(() => execa('git', ['push']))
+    .catch(() => {
+      console.warn('\x1B[33m', '推送仓库失败，请注意');
+    });
 }

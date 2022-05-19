@@ -5,6 +5,7 @@ import {
   openRepository,
   pull,
   switchBranch,
+  push,
 } from './git';
 import fs from 'fs';
 import { join } from 'path';
@@ -30,12 +31,11 @@ async function checkApp(options: AppOption) {
 async function autoMerge(options: AppOption) {
   const repo = await openRepository(options.entry || '');
   await checkNotCommit(repo);
+  const fromBranch = await getCurrenBranchName(repo);
+  await switchBranch(repo, options.autoMerge!);
   await pull(repo);
-  const fromBranch = await await getCurrenBranchName(repo);
-  const targetBranch = options.autoMerge as string;
-  await switchBranch(repo, targetBranch);
   await mergeBranch(repo, fromBranch);
-  // await push(repo);
+  await push(repo);
 }
 
 export default async function main(options: AppOption) {
@@ -53,7 +53,7 @@ export default async function main(options: AppOption) {
       await autoMerge(options);
     }
   } catch (error) {
-    console.error('\x1B[31m', error);
+    console.error('\x1B[31m', '');
     throw error;
   }
 }

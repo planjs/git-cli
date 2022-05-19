@@ -28,17 +28,17 @@
   "author": "yangzhoulong@icloud.com",
   "license": "MIT",
   "dependencies": {
-    "nodegit": "^v0.28.0-alpha.13",
+    "execa": "5",
     "shelljs": "^0.8.5"
   },
   "devDependencies": {
     "@planjs/fabric": "^0.0.90",
-    "@types/nodegit": "^0.27.10",
     "@types/shelljs": "^0.8.11",
     "@typescript-eslint/typescript-estree": "^5.17.0",
     "commitlint": "^16.2.3",
     "cz-conventional-changelog": "^3.3.0",
     "eslint": "^8.12.0",
+    "fs-extra": "^10.1.0",
     "husky": "^7.0.4"
   },
   "homepage": "https://github.com/planjs/git-cli",
