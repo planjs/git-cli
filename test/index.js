@@ -10,13 +10,14 @@ async function mainTest() {
     await fs.ensureDir(root);
     shelljs.cd(root);
     shelljs.exec('git init -b master');
+    shelljs.exec('git config --global user.email "test@example.com"');
+    shelljs.exec('git config --global user.name "test"');
     shelljs.exec('git status');
     shelljs.exec('git checkout -b master');
     await fs.ensureFile(`${root}/1.txt`);
     await fs.writeFile(`${root}/1.txt`, '1234');
     shelljs.exec('git add .');
-    const suto = shelljs.exec('git commit -m "test" -n');
-    console.log(suto);
+    shelljs.exec('git commit -m "test" -n');
     await new Promise((res) => setTimeout(res, 1000));
     await app({ version: true, entry: root });
     console.log('\x1B[32m', '检查版本操作test >>> sucesss\n');
