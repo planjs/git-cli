@@ -4,4 +4,4 @@ import main from './app';
 import { getAppOptions } from './utils/options';
 
 const options = getAppOptions();
-main(options);
+main(options).catch(() => process.exit(1));

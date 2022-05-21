@@ -53,7 +53,7 @@ export default async function main(options: AppOption) {
       await autoMerge(options);
     }
   } catch (error) {
-    console.error('\x1B[31m', '');
-    throw error;
+    console.error('\x1B[31m', error);
+    return Promise.reject(error);
   }
 }
