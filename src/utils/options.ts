@@ -5,6 +5,7 @@ const OptionMap = {
   '--autoMerge': 'autoMerge',
   '--entry': 'entry',
   '--v': 'version',
+  '--version': 'version',
 };
 
 function argvKeyToOptionKey(argvKey: any): keyof AppOption | void {
