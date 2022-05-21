@@ -16,7 +16,6 @@ export function getAppOptions(option?: AppOption): AppOption {
 
   const options: AppOption = {};
   const argv = process.argv.slice(2);
-
   argv.forEach((item) => {
     const [argvKey, val] = item.split('=');
     const key = argvKeyToOptionKey(argvKey);
