@@ -15,7 +15,8 @@ async function mainTest() {
     await fs.ensureFile(`${root}/1.txt`);
     await fs.writeFile(`${root}/1.txt`, '1234');
     shelljs.exec('git add .');
-    shelljs.exec('git commit -m "test" -n');
+    const suto = shelljs.exec('git commit -m "test" -n');
+    console.log(suto);
     await new Promise((res) => setTimeout(res, 1000));
     await app({ version: true, entry: root });
     console.log('\x1B[32m', '检查版本操作test >>> sucesss\n');
